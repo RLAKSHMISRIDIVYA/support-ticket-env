@@ -7,8 +7,12 @@ requires-python = ">=3.11"
 
 dependencies = [
     "openai>=1.14.0",
-    "pydantic>=2.6.0"
+    "pydantic>=2.6.0",
+    "openenv>=0.1.13"
 ]
 
+[project.scripts]
+server = "server.app:app"
+
 [tool.setuptools]
-packages = ["support_ticket_env"]
+packages = ["support_ticket_env", "server"]
