@@ -1,0 +1,14 @@
+[project]
+name = "support-ticket-env"
+version = "0.1.0"
+description = "Support ticket OpenEnv environment"
+authors = [{ name = "LSDIVYA" }]
+requires-python = ">=3.11"
+
+dependencies = [
+    "openai>=1.14.0",
+    "pydantic>=2.6.0"
+]
+
+[tool.setuptools]
+packages = ["support_ticket_env"]
