@@ -1,0 +1,105 @@
+name: SupportTicketEnv
+version: "1.0.0"
+description: >
+  A production-ready OpenEnv environment simulating real-world customer support
+  ticket triage and resolution. An AI agent categorises tickets, assigns priority,
+  crafts responses, and optionally asks clarifying questions over multiple steps.
+
+author: "SupportTicketEnv Contributors"
+license: MIT
+
+environment:
+  module: support_ticket_env.env
+  class: SupportTicketEnv
+  language: python
+  python_version: ">=3.10"
+
+models:
+  observation:
+    module: support_ticket_env.models
+    class: Observation
+  action:
+    module: support_ticket_env.models
+    class: Action
+  reward:
+    module: support_ticket_env.models
+    class: Reward
+
+tasks:
+  - name: easy_billing
+    description: >
+      A simple, unambiguous billing complaint. The customer was charged twice
+      for their subscription and wants a refund. Clear language, single issue.
+    difficulty: easy
+    max_steps: 5
+    true_category: billing
+    true_priority: high
+
+  - name: medium_login
+    description: >
+      A slightly ambiguous account/technical issue. The customer cannot log in
+      and is not receiving a password reset email. Time-sensitive. Could be
+      classified as account or technical — correct answer is account.
+    difficulty: medium
+    max_steps: 6
+    true_category: account
+    true_priority: high
+
+  - name: hard_multi_issue
+    description: >
+      A complex, multi-issue ticket with vague language. The customer reports
+      an app crash on export, an unexpected billing charge, and a missing
+      settings section — all in a single, loosely worded message. The dominant
+      issue is technical (crash).
+    difficulty: hard
+    max_steps: 8
+    true_category: technical
+    true_priority: high
+
+grader:
+  module: support_ticket_env.grader
+  function: compute_reward
+  deterministic: true
+  reward_range: [0.0, 1.0]
+
+reward_components:
+  - name: category_score
+    weight: 0.4
+    description: Correct ticket category classification
+  - name: priority_score
+    weight: 0.3
+    description: Correct ticket priority assignment (partial credit for off-by-one)
+  - name: response_quality_score
+    weight: 0.2
+    description: Response relevance, clarity, and completeness
+  - name: customer_satisfaction_score
+    weight: 0.1
+    description: Tone, resolution effectiveness, and correctness bonus
+
+penalties:
+  - name: wrong_category
+    value: -0.1
+    description: Predicted category does not match true category
+  - name: wrong_priority
+    value: -0.1
+    description: Predicted priority does not match true priority (full)
+  - name: empty_response
+    value: -0.2
+    description: Agent returned an empty response message
+  - name: repeated_mistake
+    value: -0.1
+    description: Agent repeated the same incorrect category or priority
+  - name: unnecessary_long
+    value: -0.05
+    description: Response message exceeds 1200 characters
+
+inference:
+  script: support_ticket_env/inference.py
+  env_vars:
+    - API_BASE_URL
+    - MODEL_NAME
+    - HF_TOKEN
+
+docker:
+  image: python:3.11-slim
+  entrypoint: ["python", "support_ticket_env/inference.py"]
